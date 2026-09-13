@@ -11,6 +11,10 @@ add_executable(Textractor WIN32
 	Textractor.rc
 	VNTranslator.ico
 )
+# Pastikan .rc dikompilasi ulang bila ikon (.ico) berubah - CMake tidak mendeteksi
+# dependensi ini otomatis, jadi kita nyatakan eksplisit.
+set_source_files_properties(Textractor.rc PROPERTIES
+	OBJECT_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/VNTranslator.ico")
 target_precompile_headers(Textractor REUSE_FROM pch)
 # ocrengine.cpp memakai C++/WinRT (template berat) -> jangan pakai PCH bersama.
 set_source_files_properties(ocrengine.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
