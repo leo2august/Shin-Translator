@@ -129,7 +129,8 @@ public:
 		}
 
 		setWindowTitle(TRANSLATION_PROVIDER);
-		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
+		// VN Translator: jangan tampilkan jendela setting otomatis saat start.
+		// Pengaturan tetap tersimpan/berfungsi; akses lewat Mode Advanced bila perlu.
 	}
 
 	~Window()

@@ -6,3 +6,15 @@
 *.vscode/
 *.user
 *.aps
+
+# Shin Translator: out-of-source build dirs (large, generated)
+/build_x64/
+/build_x86/
+
+# Shin Translator: per-user / test runtime data (never commit)
+*.ini
+* Cache (*).txt
+game_profiles.json
+SavedGames.txt
+SavedHooks.txt
+/OCR/

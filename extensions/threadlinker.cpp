@@ -27,7 +27,7 @@ public:
 		connect(ui.unlinkButton, &QPushButton::clicked, this, &Window::Unlink);
 
 		setWindowTitle(THREAD_LINKER);
-		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
+		// VN Translator: tidak tampil otomatis saat start.
 	}
 
 private:

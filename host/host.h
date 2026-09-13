@@ -21,7 +21,17 @@ namespace Host
 
 	void AddConsoleOutput(std::wstring text);
 
+	// LunaHook integration (Opsi B): external text source. Creates/uses a synthetic
+	// TextThread so LunaHook text flows through the SAME pipeline as normal hooks
+	// (scoring -> translation extensions -> cards/overlay/history).
+	// ctx/ctx2 are used to distinguish different LunaHook hook contexts.
+	TextThread& GetLunaThread(uint64_t ctx, uint64_t ctx2, std::wstring name);
+	void AddLunaSentence(uint64_t ctx, uint64_t ctx2, std::wstring name, std::wstring sentence);
+	void RemoveLunaThreads();
+
 	inline int defaultCodepage = SHIFT_JIS;
 
+	// processId 0xF10A ("FLOA"/Luna sentinel) marks synthetic LunaHook threads.
+	constexpr DWORD LUNA_PROCESS = 0xF10A;
 	constexpr ThreadParam console{ 0, -1LL, -1LL, -1LL }, clipboard{ 0, 0, -1LL, -1LL };
 }

@@ -100,6 +100,23 @@ void TextThread::Flush()
 
 	std::vector<std::wstring> sentences;
 	queuedSentences->swap(sentences);
+	// Catch-up: bila banyak kalimat menumpuk (mis. game di-fast-forward atau terjemahan
+	// lambat), LEWATI kalimat lama yang sudah usang & proses hanya yang TERBARU. Ini
+	// mencegah antrean makin tertinggal jauh dari teks yang sedang tampil di layar.
+	// Kalimat lama tetap disimpan ke history mentah (tanpa terjemahan) agar tak hilang.
+	if (skipStaleSentences && sentences.size() > 1)
+	{
+		auto storage = this->storage.Acquire();
+		for (size_t i = 0; i + 1 < sentences.size(); ++i)
+		{
+			sentences[i].erase(std::remove(sentences[i].begin(), sentences[i].end(), 0), sentences[i].end());
+			// simpan ke storage saja (tanpa Output/terjemahan) supaya cepat
+			if (!sentences[i].empty()) storage->append(sentences[i]).append(L"\n");
+		}
+		std::wstring latest = std::move(sentences.back());
+		sentences.clear();
+		sentences.push_back(std::move(latest));
+	}
 	int totalSize = 0;
 	for (auto& sentence : sentences)
 	{

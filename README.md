@@ -1,52 +1,120 @@
-# Textractor
+<p align="center">
+  <img src="assets/logo_flower.png" width="120" alt="Shin Translator logo">
+</p>
 
-![How it looks](screenshot.png)
+<h1 align="center">Shin Translator</h1>
 
-[English](README.md) ● [Español](README_ES.md) ● [简体中文](README_SC.md) ● [Русский](README_RU.md) ● [한국어](README_KR.md) ● [ภาษาไทย](README_TH.md) ● [Français](README_FR.md) ● [Italiano](README_IT.md) ● [日本語](README_JP.md) ● [Bahasa Indonesia](README_ID.md) ● [Português](README_PT.md) ● [Deutsch](README_DE.md)
+<p align="center">
+  <b>An all-in-one, real-time visual novel translator for Windows.</b><br>
+  Hook the game text or read it from the screen with OCR, and see the translation
+  in a clean overlay — with Japanese learning tools built in.
+</p>
 
-**Textractor** (a.k.a. NextHooker) is an open-source x86/x64 video game text hooker for Windows 7+ (and Wine) based off of [ITHVNR](https://web.archive.org/web/20160202084144/http://www.hongfire.com/forum/showthread.php/438331-ITHVNR-ITH-with-the-VNR-engine).<br>
-Watch the [tutorial video](docs/TUTORIAL.md) for a quick rundown on using it.
+<p align="center">
+  <i>Portable. No installation. Works offline for text extraction and OCR.</i>
+</p>
 
-## Download
+---
 
-Official stable releases of Textractor can be found [here](https://github.com/Artikash/Textractor/releases).<br>
-The last release of ITHVNR can be found [here](https://drive.google.com/open?id=13aHF4uIXWn-3YML_k2YCDWhtGgn5-tnO).<br>
-Experimental builds of Textractor (with debug info) from the latest source can be found [here](https://ci.appveyor.com/project/Artikash/textractor/history) in the 'Artifacts' section of each job.
+## ✨ Features
 
-## Features
+- **Automatic text hooking** — attach to a running visual novel and the dialogue is
+  detected and translated automatically. Two hooking engines are bundled:
+  - **Textractor** engine (default)
+  - **LunaHook** engine (alternative — reads many games Textractor can't). One click to switch.
+- **Smart Auto-Detect** — automatically picks the real dialogue text source and
+  ignores junk threads (font tables, control codes, duplicate speaker names).
+- **Floating overlay** — a movable, resizable translation window that sits on top of
+  the game, with adjustable transparency, outline text for readability, and a
+  minimize / show toggle.
+- **Screen OCR (opsi A)** — for games that can't be hooked (e.g. RPG menus):
+  - Select an area on screen, capture it, and it is OCR'd and translated instantly.
+  - Each capture is saved as an image + text per game in an **OCR History** side panel,
+    so you can reopen any past capture and its translation.
+  - Powered by the offline Windows OCR engine (install the Japanese language pack for best results).
+- **Game profiles** — save a game's engine + language so it is ready instantly next
+  time. **Import / Export** profiles to share them with others.
+- **Japanese learning tools** — show the original text with furigana, space words for
+  readability, and click any word/kanji for an offline dictionary lookup (kanji info + JLPT vocab).
+- **Many target languages** — translate into English, Indonesian, and dozens more.
+- **Fully portable** — everything (profiles, OCR history, settings) is stored next to
+  the app. Move the folder and your data goes with it.
 
-- Highly extensible and customizable
-- Auto hook many game engines (including some not supported by VNR!)
-- Hook text using /H "hook" codes (most AGTH codes supported)
-- Automatically search for possible hook codes
+---
 
-## Support
+## 🚀 Getting started
 
-Let me know of any bugs, games that Textractor has trouble hooking, feature requests, or other suggestions by posting an issue.<br>
-If you have trouble hooking a game, please show me a way to freely download it or gift it to me on [Steam](https://steamcommunity.com/profiles/76561198097566313/).
+1. Download the latest release and **extract the whole folder** anywhere.
+2. Run **`Shin Translator.exe`**.
+3. Click **Choose a game** and pick the running visual novel / game window.
+4. Text is detected and translated automatically. The floating overlay shows the
+   translation on top of the game.
+5. If a game's text does not appear, click **Switch to LunaHook** to try the
+   alternative engine.
 
-## Extensions
+### Screen OCR (for games that can't be hooked)
 
-See my [Example Extension project](https://github.com/Artikash/ExampleExtension) to see how to build an extension.<br>
-See the extensions folder for examples of what extensions can do. 
+1. In the **Screen OCR** card, click **Select area**.
+2. The main window hides; drag a box over the text you want, then click **Capture**
+   (or **Cancel** to abort).
+3. The area is captured, OCR'd, and translated. Open the **OCR History** panel on the
+   right to browse, reopen, or delete past captures — grouped per game.
 
-## Contributing
+### Tips
 
-All contributions are appreciated! Please email me at akashmozumdar@gmail.com if you have any questions about the codebase.<br>
-You should use the standard process of making a pull request (fork, branch, commit changes, make PR from your branch to my master).<br>
-Contributing a translation is easy: [text.cpp](text.cpp) contains all of the text strings that you need to translate. Translations of this README or the tutorial video transcript are also welcome.
+- First launch may trigger Windows SmartScreen ("Windows protected your PC"): click
+  **More info → Run anyway**. This is normal for unsigned apps.
+- Some Japanese games need Japanese system locale, or use the built-in
+  Japanese-locale launch option.
+- For OCR, install the **Japanese language pack** in Windows Settings → Time & Language.
 
-## Compiling
-Before compiling Textractor, you need Qt version 5.13 and Visual Studio with CMake support.
-Clone Textractor's source and initialize submodules with `git clone https://github.com/Artikash/Textractor.git` and `git submodule update --init`.
-You should then be able to just open the source folder in Visual Studio and build.
+---
 
-## Project Architecture
+## 🏗️ Building from source
 
-The host injects texthook into the target process and connects to it via 2 pipe files.
-texthook waits for the pipe to be connected, then injects a few instructions into any text outputting functions (e.g. TextOut, GetGlyphOutline) that cause their input to be sent through the pipe.<br>
-Additional information about hooks is exchanged via shared memory.<br>
-The text that the host receives through the pipe is then processed a little before being dispatched back to the GUI.<br>
-Finally, the GUI dispatches the text to extensions before displaying it.
+Shin Translator is a C++/Qt5 application. It builds with MSVC (Visual Studio 2022) and
+CMake, for both x86 and x64 (both are needed — the architecture must match the game).
 
-## [Developers](docs/CREDITS.md)
+```
+# x64 (developer command prompt: vcvars64.bat)
+cmake --build build_x64
+
+# x86 (developer command prompt: vcvars32.bat)
+cmake --build build_x86
+```
+
+Requirements: Qt 5.15.x (MSVC), CMake, and the Visual Studio 2022 C++ toolchain.
+
+---
+
+## 🙏 Credits & attribution
+
+Shin Translator is a **fork** and stands on the shoulders of these open-source projects.
+Full credit goes to their authors:
+
+- **[Textractor](https://github.com/Artikash/Textractor)** — by Artikash and contributors.
+  The core text-hooking engine. Licensed under **GPLv3**.
+- **[LunaHook](https://github.com/HIllya51/LunaHook)** /
+  **[LunaTranslator](https://github.com/HIllya51/LunaTranslator)** — by HIllya51 and
+  contributors. Alternative hooking engine. Licensed under **GPLv3**.
+
+Japanese learning data:
+
+- Kanji data derived from **KANJIDIC / KANJIDIC2** (EDRDG), via the
+  [kanji-data](https://github.com/davidluzgouveia/kanji-data) project — CC BY-SA 4.0.
+- JLPT vocabulary from the
+  [JLPT_Vocabulary](https://github.com/Bluskyo/JLPT_Vocabulary) project, based on
+  tanos.co.uk JLPT lists.
+
+See **[ATTRIBUTIONS.txt](ATTRIBUTIONS.txt)** for full details.
+
+---
+
+## 📄 License
+
+Shin Translator is distributed under the **GNU General Public License v3.0** (GPLv3),
+in accordance with the licenses of Textractor and LunaHook, on which it is based.
+
+See the [LICENSE](LICENSE) file for the full text. You are free to use, study, modify,
+and redistribute this software under the terms of the GPLv3, provided the corresponding
+source code is made available.

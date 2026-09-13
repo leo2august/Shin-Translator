@@ -27,7 +27,7 @@ public:
 		connect(ui.saveButton, &QPushButton::clicked, this, &Window::Save);
 		
 		setWindowTitle(REGEX_FILTER);
-		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
+		// VN Translator: jangan tampilkan jendela setting otomatis saat start.
 	}
 
 	void SetRegex(QString regex)

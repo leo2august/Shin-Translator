@@ -4,11 +4,17 @@ add_executable(Textractor WIN32
 	mainwindow.cpp
 	extenwindow.cpp
 	attachprocessdialog.cpp
+	lunabridge.cpp
+	japaneselearning.cpp
+	gameprofiles.cpp
+	ocrengine.cpp
 	Textractor.rc
-	Textractor.ico
+	VNTranslator.ico
 )
 target_precompile_headers(Textractor REUSE_FROM pch)
-target_link_libraries(Textractor host Qt5::Widgets Qt5::WinExtras shell32 winhttp)
+# ocrengine.cpp memakai C++/WinRT (template berat) -> jangan pakai PCH bersama.
+set_source_files_properties(ocrengine.cpp PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+target_link_libraries(Textractor host Qt5::Widgets Qt5::WinExtras shell32 winhttp windowsapp)
 
 if (NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Core.dll AND NOT EXISTS ${CMAKE_FINAL_OUTPUT_DIRECTORY}/Qt5Cored.dll)
 	add_custom_command(TARGET Textractor

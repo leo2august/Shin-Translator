@@ -9,7 +9,8 @@ public:
 	inline static OutputCallback Output;
 
 	inline static bool filterRepetition = false;
-	inline static int flushDelay = 500; // flush every 500ms by default
+	inline static bool skipStaleSentences = true; // lewati kalimat lama saat menumpuk (catch-up)
+	inline static int flushDelay = 300; // flush every 300ms (lebih responsif; terjemahan muncul lebih cepat)
 	inline static int maxBufferSize = 3000;
 	inline static int maxHistorySize = 10'000'000;
 

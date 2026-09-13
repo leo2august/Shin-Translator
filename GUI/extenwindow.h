@@ -11,6 +11,10 @@ struct InfoForExtension
 bool DispatchSentenceToExtensions(std::wstring& sentence, const InfoForExtension* sentenceInfo);
 void CleanupExtensions(); // must call this before exiting the program, only way to uphold guarantee that DllMain and OnNewSentence won't be called concurrently
 
+// VN Translator: kontrol ekstensi dari panel Settings (mis. toggle overlay "Extra Window").
+bool IsExtensionLoaded(const QString& name);
+void SetExtensionEnabled(const QString& name, bool enabled); // muat/lepas ekstensi bernama, lalu simpan urutan
+
 class ExtenWindow : public QMainWindow
 {
 public:

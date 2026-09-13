@@ -19,7 +19,7 @@
 
 // If you are updating a previous translation see https://github.com/Artikash/Textractor/issues/313
 
-const char* NATIVE_LANGUAGE = "English";
+const char* NATIVE_LANGUAGE = "English"; // VN Translator: default terjemahan ke English
 const char* ATTACH = u8"Attach to game";
 const char* LAUNCH = u8"Launch game";
 const char* CONFIG = u8"Configure game";

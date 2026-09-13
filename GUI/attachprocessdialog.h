@@ -4,6 +4,9 @@
 #include "ui_attachprocessdialog.h"
 #include <QStandardItemModel>
 
+class QLineEdit;
+class QListWidget;
+
 class AttachProcessDialog : public QDialog
 {
 public:
@@ -14,4 +17,6 @@ private:
     Ui::AttachProcessDialog ui;
     QStandardItemModel model;
     QString selectedProcess;
+    QLineEdit* searchEdit = nullptr;
+    QListWidget* list = nullptr;
 };

@@ -53,7 +53,7 @@ public:
 
 		resize(800, 600);
 		setWindowTitle("Lua");
-		QMetaObject::invokeMethod(this, &QWidget::show, Qt::QueuedConnection);
+		// VN Translator: tidak tampil otomatis saat start.
 
 		LoadScript();
 	}

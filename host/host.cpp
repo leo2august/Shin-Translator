@@ -256,4 +256,27 @@ namespace Host
 	{
 		GetThread(console).AddSentence(std::move(text));
 	}
+
+	TextThread& GetLunaThread(uint64_t ctx, uint64_t ctx2, std::wstring name)
+	{
+		ThreadParam tp{ LUNA_PROCESS, 0, ctx, ctx2 };
+		auto textThreadsByParams = ::textThreadsByParams.Acquire();
+		auto it = textThreadsByParams->find(tp);
+		if (it == textThreadsByParams->end())
+		{
+			it = textThreadsByParams->try_emplace(tp, tp, HookParam{}, std::move(name)).first;
+			OnCreate(it->second);
+		}
+		return it->second;
+	}
+
+	void AddLunaSentence(uint64_t ctx, uint64_t ctx2, std::wstring name, std::wstring sentence)
+	{
+		GetLunaThread(ctx, ctx2, std::move(name)).AddSentence(std::move(sentence));
+	}
+
+	void RemoveLunaThreads()
+	{
+		RemoveThreads([](ThreadParam tp) { return tp.processId == LUNA_PROCESS; });
+	}
 }

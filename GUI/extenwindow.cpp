@@ -6,6 +6,11 @@
 #include <QDropEvent>
 #include <QMimeData>
 #include <QUrl>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
+#include <QLabel>
+#include <QListWidgetItem>
 
 extern const char* EXTENSIONS;
 extern const char* ADD_EXTENSION;
@@ -18,7 +23,7 @@ extern const char* EXTEN_WINDOW_INSTRUCTIONS;
 namespace
 {
 	constexpr auto EXTEN_SAVE_FILE = u8"SavedExtensions.txt";
-	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Regex Filter>Copy to Clipboard>Google Translate>Extra Window>Extra Newlines";
+	constexpr auto DEFAULT_EXTENSIONS = u8"Remove Repeated Characters>Regex Filter>VN Translate>Extra Window>Extra Newlines";
 
 	struct Extension
 	{
@@ -69,6 +74,46 @@ namespace
 		::extensions = extensions;
 	}
 
+	void DeleteByName(const QString& name); // fwd
+
+	// Ikon huруф sederhana untuk tiap kategori ekstensi (identitas visual).
+	QString ExtenGlyph(const QString& name)
+	{
+		QString n = name.toLower();
+		if (n.contains("translate")) return QString::fromUtf8(u8"\U0001F4AC");   // terjemahan
+		if (n.contains("window") || n.contains("overlay")) return QString::fromUtf8(u8"\U0001F5BC"); // overlay
+		if (n.contains("regex") || n.contains("filter") || n.contains("replace")) return QString::fromUtf8(u8"\U0001F9F9"); // filter
+		if (n.contains("repeat") || n.contains("newline") || n.contains("sentence")) return QString::fromUtf8(u8"\u2702"); // pembersih teks
+		if (n.contains("clipboard") || n.contains("copy")) return QString::fromUtf8(u8"\U0001F4CB");
+		if (n.contains("lua")) return QString::fromUtf8(u8"\U0001F4DC");
+		return QString::fromUtf8(u8"\U0001F9E9");
+	}
+
+	// Bangun satu baris kartu ekstensi (nama + glyph + tombol hapus).
+	QWidget* MakeExtenRow(const QString& name)
+	{
+		auto row = new QWidget();
+		row->setObjectName("extenRow");
+		auto h = new QHBoxLayout(row);
+		h->setContentsMargins(12, 9, 10, 9);
+		h->setSpacing(10);
+		auto glyph = new QLabel(ExtenGlyph(name), row); glyph->setObjectName("extenGlyph");
+		h->addWidget(glyph);
+		auto nameLbl = new QLabel(name, row); nameLbl->setObjectName("extenName");
+		h->addWidget(nameLbl, 1);
+		auto grip = new QLabel(QString::fromUtf8(u8"\u2630"), row); grip->setObjectName("extenGrip");
+		grip->setToolTip("Drag to reorder");
+		h->addWidget(grip);
+		auto del = new QPushButton(QString::fromUtf8(u8"\u2715"), row);
+		del->setObjectName("extenDel");
+		del->setCursor(Qt::PointingHandCursor);
+		del->setToolTip("Remove this extension");
+		del->setFixedSize(26, 26);
+		QObject::connect(del, &QPushButton::clicked, [name] { DeleteByName(name); });
+		h->addWidget(del);
+		return row;
+	}
+
 	void Sync()
 	{
 		ui.extenList->clear();
@@ -76,8 +121,13 @@ namespace
 		concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
 		for (auto extension : extensions)
 		{
-			ui.extenList->addItem(S(extension.name));
-			extenSaveFile.write((S(extension.name) + ">").toUtf8());
+			QString name = S(extension.name);
+			auto item = new QListWidgetItem(ui.extenList);
+			item->setData(Qt::UserRole, name); // simpan nama utk reorder/drag
+			item->setSizeHint(QSize(0, 46));
+			ui.extenList->addItem(item);
+			ui.extenList->setItemWidget(item, MakeExtenRow(name));
+			extenSaveFile.write((name + ">").toUtf8());
 		}
 	}
 
@@ -104,12 +154,60 @@ namespace
 		}
 	}
 
+	void DeleteByName(const QString& name)
+	{
+		int index = -1;
+		{
+			concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
+			std::wstring wname = S(name);
+			for (int i = 0; i < (int)extensions.size(); ++i) if (extensions[i].name == wname) { index = i; break; }
+		}
+		if (index >= 0) { Unload(index); Sync(); }
+	}
+
 	void ContextMenu(QPoint point)
 	{
 		QAction addExtension(ADD_EXTENSION), removeExtension(REMOVE_EXTENSION);
 		if (auto action = QMenu::exec({ &addExtension, &removeExtension }, ui.extenList->mapToGlobal(point), nullptr, This))
 			if (action == &removeExtension) Delete();
 			else if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll);;Libraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+	}
+}
+
+bool IsExtensionLoaded(const QString& name)
+{
+	concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
+	std::wstring wname = S(name);
+	for (const auto& extension : extensions) if (extension.name == wname) return true;
+	return false;
+}
+
+void SetExtensionEnabled(const QString& name, bool enabled)
+{
+	bool loaded = IsExtensionLoaded(name);
+	if (enabled == loaded) return;
+	if (enabled)
+	{
+		Load(name); // menambah ke akhir pipeline (setelah VN Translate) -> aman untuk overlay
+	}
+	else
+	{
+		int index = -1;
+		{
+			concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
+			std::wstring wname = S(name);
+			for (int i = 0; i < (int)extensions.size(); ++i) if (extensions[i].name == wname) { index = i; break; }
+		}
+		if (index >= 0) Unload(index);
+	}
+	// Perbarui daftar UI + file SavedExtensions.txt bila jendela ekstensi sudah dibuat.
+	if (This) Sync();
+	else
+	{
+		// Jendela ekstensi belum dibuat: tulis ulang file simpan langsung dari vektor.
+		QTextFile extenSaveFile(EXTEN_SAVE_FILE, QIODevice::WriteOnly | QIODevice::Truncate);
+		concurrency::reader_writer_lock::scoped_lock_read readLock(extenMutex);
+		for (const auto& extension : extensions) extenSaveFile.write((S(extension.name) + ">").toUtf8());
 	}
 }
 
@@ -136,8 +234,47 @@ ExtenWindow::ExtenWindow(QWidget* parent) : QMainWindow(parent, Qt::WindowCloseB
 {
 	This = this;
 	ui.setupUi(this);
-	ui.vboxLayout->addWidget(new QLabel(EXTEN_WINDOW_INSTRUCTIONS, this));
-	setWindowTitle(EXTENSIONS);
+	setWindowTitle(QString::fromUtf8(u8"Shin Translator \u2014 Extensions"));
+	resize(460, 520);
+
+	// Wadah utama diberi identitas (objectName) untuk styling dark-navy/violet.
+	if (auto central = centralWidget()) central->setObjectName("extenRoot");
+
+	// --- Header modern: judul + subjudul + tombol Add ---
+	auto header = new QWidget(this);
+	header->setObjectName("extenHeader");
+	auto hl = new QHBoxLayout(header);
+	hl->setContentsMargins(16, 12, 14, 12);
+	auto titleBox = new QVBoxLayout(); titleBox->setSpacing(1);
+	auto title = new QLabel(QString::fromUtf8(u8"\U0001F9E9  Extensions"), header);
+	title->setObjectName("extenTitle");
+	titleBox->addWidget(title);
+	auto subtitle = new QLabel(QString::fromUtf8(u8"Drag to reorder \u2022 processed top to bottom"), header);
+	subtitle->setObjectName("extenSubtitle");
+	titleBox->addWidget(subtitle);
+	hl->addLayout(titleBox);
+	hl->addStretch();
+	auto addBtn = new QPushButton(QString::fromUtf8(u8"+  Add"), header);
+	addBtn->setObjectName("extenAdd");
+	addBtn->setCursor(Qt::PointingHandCursor);
+	connect(addBtn, &QPushButton::clicked, []
+	{
+		if (QString extenFile = QFileDialog::getOpenFileName(This, ADD_EXTENSION, ".", EXTENSIONS + QString(" (*.xdll);;Libraries (*.dll)")); !extenFile.isEmpty()) Add(extenFile);
+	});
+	hl->addWidget(addBtn);
+	ui.vboxLayout->insertWidget(0, header);
+
+	ui.extenList->setObjectName("extenList");
+	ui.extenList->setSpacing(4);
+	ui.extenList->setSelectionMode(QAbstractItemView::SingleSelection);
+
+	// Footer hint.
+	auto footer = new QLabel(QString::fromUtf8(
+		u8"\u2715 removes an extension \u2022 drag \u2630 to change order \u2022 "
+		u8"drop a .dll here to add"), this);
+	footer->setObjectName("extenFooter");
+	footer->setWordWrap(true);
+	ui.vboxLayout->addWidget(footer);
 
 	connect(ui.extenList, &QListWidget::customContextMenuRequested, ContextMenu);
 	ui.extenList->installEventFilter(this);
@@ -153,7 +290,7 @@ bool ExtenWindow::eventFilter(QObject* target, QEvent* event)
 	if (event->type() == QEvent::ChildRemoved)
 	{
 		QStringList extenNames;
-		for (int i = 0; i < ui.extenList->count(); ++i) extenNames.push_back(ui.extenList->item(i)->text());
+		for (int i = 0; i < ui.extenList->count(); ++i) extenNames.push_back(ui.extenList->item(i)->data(Qt::UserRole).toString());
 		Reorder(extenNames);
 		Sync();
 	}

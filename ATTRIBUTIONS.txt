@@ -1,0 +1,29 @@
+Shin Translator - Credits & third-party attributions
+====================================================
+
+Shin Translator is an all-in-one visual novel translator. It is a modified
+version (fork) built on the following open-source projects. Full credit goes to
+their authors. Shin Translator adds/modifies the user interface, a screen OCR
+mode, Japanese-learning helpers and several quality-of-life improvements.
+
+TEXT HOOKING ENGINES (GPLv3)
+- Textractor - by Artikash and contributors.
+  Source: https://github.com/Artikash/Textractor
+  Licensed under the GNU General Public License v3.0.
+- LunaHook / LunaTranslator - by HIllya51 and contributors.
+  Source: https://github.com/HIllya51/LunaHook
+          https://github.com/HIllya51/LunaTranslator
+  Licensed under the GNU General Public License v3.0.
+
+Because these components are GPLv3, Shin Translator is also distributed under
+the GNU General Public License v3.0. See LICENSE for the full text. The
+corresponding source code is available at the project page.
+
+JAPANESE-LEARNING DATA
+- Kanji data (kanji.json): derived from KANJIDIC / KANJIDIC2 by the Electronic
+  Dictionary Research and Development Group (EDRDG), via the kanji-data project
+  (github.com/davidluzgouveia/kanji-data). Licensed under CC BY-SA 4.0.
+- JLPT vocabulary (jlpt_vocab.json): from the JLPT_Vocabulary project
+  (github.com/Bluskyo/JLPT_Vocabulary), based on tanos.co.uk JLPT lists.
+  KANJIDIC/JMdict are the property of the EDRDG and are used in conformance with
+  the Group's licence (see https://www.edrdg.org/edrdg/license.html).
